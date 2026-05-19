@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Particle Viewer</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; 
+               display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        canvas { background: #2a2a2a; border: 1px solid #444; }
+        .controls { margin: 10px; }
+        button { padding: 8px 16px; margin: 0 4px; font-size: 14px; }
+        #info { margin-top: 10px; font-family: monospace; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <h2>particle simulation</h2>
+    <input type="file" id="fileInput" accept=".csv">
+    <canvas id="canvas" width="600" height="600"></canvas>
+    <div class="controls">
+        <button id="playBtn">play</button>
+        <button id="resetBtn">reset</button>
+        <label>speed: <input type="range" id="speed" min="1" max="60" value="20"></label>
+    </div>
+    <div id="info">load frames.csv to start</div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const BOX = 100;       // must match C++ side
+        const SCALE = W / BOX; // pixels per simulation unit
+        
+        let frames = {};       // step -> [{id, x, y}, ...]
+        let stepKeys = [];     // sorted step numbers
+        let currentStep = 0;
+        let playing = false;
+        let stepsPerSecond = 20;
+        let lastTime = 0;
+        
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => parseCSV(ev.target.result);
+            reader.readAsText(file);
+        });
+        
+        function parseCSV(text) {
+            frames = {};
+            const lines = text.trim().split('\n').slice(1); // skip header
+            for (const line of lines) {
+                const [step, id, x, y] = line.split(',').map(Number);
+                if (!frames[step]) frames[step] = [];
+                frames[step].push({id, x, y});
+            }
+            stepKeys = Object.keys(frames).map(Number).sort((a, b) => a - b);
+            currentStep = 0;
+            document.getElementById('info').textContent = 
+                `loaded ${stepKeys.length} frames, ${frames[stepKeys[0]].length} particles`;
+            draw();
+        }
+        
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            // box outline
+            ctx.strokeStyle = '#666';
+            ctx.strokeRect(0, 0, W, H);
+            
+            const step = stepKeys[currentStep];
+            if (step === undefined) return;
+            const particles = frames[step];
+            
+            for (const p of particles) {
+                // flip Y so up is up (canvas Y goes down)
+                const px = p.x * SCALE;
+                const py = H - p.y * SCALE;
+                ctx.fillStyle = `hsl(${p.id * 137 % 360}, 70%, 60%)`;
+                ctx.beginPath();
+                ctx.arc(px, py, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            document.getElementById('info').textContent = 
+                `step ${step} / ${stepKeys[stepKeys.length-1]}`;
+        }
+        
+        function animate(now) {
+            if (!playing) return;
+            const interval = 1000 / stepsPerSecond;
+            if (now - lastTime >= interval) {
+                currentStep = (currentStep + 1) % stepKeys.length;
+                draw();
+                lastTime = now;
+            }
+            requestAnimationFrame(animate);
+        }
+        
+        document.getElementById('playBtn').onclick = () => {
+            playing = !playing;
+            document.getElementById('playBtn').textContent = playing ? 'pause' : 'play';
+            if (playing) {
+                lastTime = performance.now();
+                requestAnimationFrame(animate);
+            }
+        };
+        document.getElementById('resetBtn').onclick = () => {
+            currentStep = 0;
+            draw();
+        };
+        document.getElementById('speed').oninput = (e) => {
+            stepsPerSecond = parseInt(e.target.value);
+        };
+    </script>
+</body>
+</html>

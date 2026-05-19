@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Collision Algorithm Benchmark</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee;
+               display: flex; flex-direction: column; align-items: center; padding: 30px; }
+        canvas { background: #2a2a2a; border: 1px solid #555; margin-top: 20px; }
+        input { margin: 15px 0; }
+        .legend { display: flex; gap: 30px; margin-top: 12px; font-size: 14px; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    </style>
+</head>
+<body>
+    <h2>Naive O(N²) vs Spatial Hash O(N)</h2>
+    <input type="file" id="fileInput" accept=".csv">
+    <canvas id="canvas" width="800" height="500"></canvas>
+    <div class="legend">
+        <span><span class="dot" style="background:#e74c3c"></span>Naive O(N²)</span>
+        <span><span class="dot" style="background:#2ecc71"></span>Spatial Hash O(N)</span>
+    </div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const PAD = { top: 40, right: 40, bottom: 60, left: 75 };
+
+document.getElementById('fileInput').addEventListener('change', e => {
+    const reader = new FileReader();
+    reader.onload = ev => draw(parseCSV(ev.target.result));
+    reader.readAsText(e.target.files[0]);
+});
+
+function parseCSV(text) {
+    const lines = text.trim().split('\n').slice(1);
+    return lines.map(l => {
+        const [N, naive, hashed] = l.split(',').map(Number);
+        return { N, naive, hashed };
+    });
+}
+
+function draw(data) {
+    ctx.clearRect(0, 0, W, H);
+
+    const plotW = W - PAD.left - PAD.right;
+    const plotH = H - PAD.top  - PAD.bottom;
+
+    const Ns     = data.map(d => d.N);
+    const maxMs  = Math.max(...data.map(d => Math.max(d.naive, d.hashed)));
+    const minN   = Ns[0], maxN = Ns[Ns.length - 1];
+
+    // Axes
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, PAD.top);
+    ctx.lineTo(PAD.left, PAD.top + plotH);
+    ctx.lineTo(PAD.left + plotW, PAD.top + plotH);
+    ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#aaa';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('N (number of particles)', PAD.left + plotW / 2, H - 10);
+    ctx.save();
+    ctx.translate(18, PAD.top + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('ms per frame', 0, 0);
+    ctx.restore();
+
+    // X scale: log2 (because N doubles each time)
+    const xScale = v => PAD.left + (Math.log2(v) - Math.log2(minN))
+                        / (Math.log2(maxN) - Math.log2(minN)) * plotW;
+    // Y scale: linear, from 0 to maxMs
+    const yScale = v => PAD.top + plotH - (v / maxMs) * plotH;
+
+    // Grid lines + X tick labels
+    for (const N of Ns) {
+        const x = xScale(N);
+        ctx.strokeStyle = '#333';
+        ctx.beginPath();
+        ctx.moveTo(x, PAD.top);
+        ctx.lineTo(x, PAD.top + plotH);
+        ctx.stroke();
+        ctx.fillStyle = '#888';
+        ctx.textAlign = 'center';
+        ctx.fillText(N >= 1000 ? (N/1000) + 'k' : N, x, PAD.top + plotH + 18);
+    }
+
+    // Y tick labels
+    const yTicks = 5;
+    for (let i = 0; i <= yTicks; ++i) {
+        const val = (maxMs * i / yTicks);
+        const y   = yScale(val);
+        ctx.fillStyle = '#888';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toFixed(1), PAD.left - 8, y + 4);
+        ctx.strokeStyle = '#333';
+        ctx.beginPath();
+        ctx.moveTo(PAD.left, y);
+        ctx.lineTo(PAD.left + plotW, y);
+        ctx.stroke();
+    }
+
+    // Draw lines + dots
+    const series = [
+        { key: 'naive',  color: '#e74c3c' },
+        { key: 'hashed', color: '#2ecc71' },
+    ];
+
+    for (const s of series) {
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        data.forEach((d, i) => {
+            const x = xScale(d.N);
+            const y = yScale(d[s.key]);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Dots + value labels
+        for (const d of data) {
+            const x = xScale(d.N);
+            const y = yScale(d[s.key]);
+            ctx.fillStyle = s.color;
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = s.color;
+            ctx.textAlign = 'center';
+            ctx.font = '11px monospace';
+            ctx.fillText(d[s.key].toFixed(2), x, y - 10);
+        }
+    }
+
+    // Title
+    ctx.fillStyle = '#eee';
+    ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Collision detection: ms per frame vs N  (log scale X)', W/2, 22);
+}
+</script>
+</body>
+</html>

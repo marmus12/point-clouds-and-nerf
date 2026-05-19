@@ -1,0 +1,23 @@
+# Compiled binaries
+*.exe
+*.o
+*.obj
+
+# Build artifacts
+*/build/
+build/
+
+# Output data
+*.csv
+part1/out_*.ply
+
+# OS / IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+pdfs/
+
+# Large files (handled separately)
+part3/fox_mesh.ply
