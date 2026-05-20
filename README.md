@@ -256,7 +256,7 @@ All measurements on Loot.ply (784,142 points), MinGW g++ 15.2 on Windows.
 
 
 
-A single `-O2` flag delivers 2-6× speedup with no code changes — primarily
+A single `-O2` flag delivers 2-6× speedup with no code changes; primarily
 
 through auto-vectorization (SIMD), function inlining, and loop unrolling.
 
@@ -286,13 +286,8 @@ AoS to SoA conversion overhead: \~4-9 ms one-time cost.
 
 The strongest SoA gain (2.74×) appears on the tilted rotation, which is a
 
-pure 3x3 matrix-multiply per point — exactly the case where parallel float
-
-arrays let the compiler emit vectorized loads without struct-stride
-
-gather. The explode operation gains only 1.12× because its sqrt() call
-
-does not vectorize. The translate result is essentially a wash; one
+pure 3x3 matrix-multiply per point. The explode operation gains only 1.12× because 
+its sqrt() call does not vectorize. The translate result is somewhat similar for both; one
 
 plausible explanation is that with 784k points the working set (\~12 MB)
 
@@ -436,7 +431,7 @@ apart, requiring a 5×5 patch scan (24 neighbors). With a larger cell
 
 particles per cell grows quadratically, and same-cell pair count
 
-approaches O(N²) again. `cell = 2r` is the mathematical sweet spot.
+approaches O(N²) again. `cell = 2r` is the optimal value.
 
 
 
@@ -444,7 +439,7 @@ approaches O(N²) again. `cell = 2r` is the mathematical sweet spot.
 
 neighbors are checked (right, top-right, top, top-left). The other 4 are
 
-implicit — every cell is the back-neighbor of some other cell, so each
+not needed since every cell is the back-neighbor of some other cell, so each
 
 unordered pair is visited exactly once. This halves the work without
 
@@ -514,7 +509,7 @@ Benchmark on a single CPU thread, MinGW g++ 15.2:
 
 
 
-The crossover is around N=1000 — below that, the spatial hash's grid
+The crossover is around N=1000 and below that, the spatial hash's grid
 
 build overhead exceeds the savings. Above N=1000, the gap widens
 
@@ -544,7 +539,7 @@ comfortably in a single frame budget.
 
 \- \*\*Single-threaded.\*\* The grid build and pair check could be
 
-&#x20; parallelized — counting-sort style grid build with prefix sum + scatter,
+&#x20; parallelized and counting-sort style grid build with prefix sum + scatter,
 
 &#x20; then thread-per-cell collision resolution. This is the natural GPU
 
@@ -614,7 +609,7 @@ with some surrounding "puffy" artifacts typical of marching-cubes
 
 extraction from a continuous density field (the threshold choice trades
 
-off detail completeness against noise — see screenshots).
+off detail completeness against noise (see screenshots) ).
 
 
 
@@ -634,7 +629,7 @@ The Colab notebook handles all setup (CUDA toolchain, CMake, build).
 
 A snapshot of the build was backed up to Google Drive partway through to
 
-survive runtime disconnections — a useful trick for long-running Colab
+survive runtime disconnections. This is a useful trick for long-running Colab
 
 sessions.
 
@@ -658,7 +653,7 @@ instant-ngp that make near-real-time NeRF possible in Part 3.
 
 Limitations are listed honestly per part. Improvements I considered but
 
-did not implement are noted as future work — none of them are blockers
+did not implement are noted as future work. None of them are blockers
 
 for the test brief, and time was the main constraint.
 

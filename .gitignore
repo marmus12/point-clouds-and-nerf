@@ -10,7 +10,7 @@ build/
 # Output data
 *.csv
 part1/out_*.ply
-
+part3/report.docx
 # OS / IDE
 .vscode/
 .idea/
