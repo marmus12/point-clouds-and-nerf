@@ -9,11 +9,6 @@ particle-based spatial simulations, and Neural Radiance Field rendering
 pipelines.
 
 
-
-\*by Emre Can Kaya\*
-
-
-
 \---
 
 
