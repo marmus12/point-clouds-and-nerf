@@ -77,7 +77,7 @@ Windows. Part 3's practical export uses Google Colab with a Tesla T4 GPU.
 
 ├── part3/
 
-│   ├── report.docx             # Theoretical analysis (a, b, c)
+│   ├── part3_report.pdf             # Theoretical analysis (a, b, c)
 
 │   ├── instant-ngp.ipynb       # Colab notebook for build + train + export
 
