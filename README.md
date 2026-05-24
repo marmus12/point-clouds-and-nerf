@@ -257,46 +257,24 @@ through auto-vectorization (SIMD), function inlining, and loop unrolling.
 
 
 
-\*\*AoS vs SoA at -O2 (best of three runs):\*\*
+**AoS vs SoA at -O2 (median of 10 runs):**
 
-
-
-| Operation        | AoS (ms) | SoA (ms) | Speedup |
-
-|------------------|---------:|---------:|--------:|
-
-| translate        |    3.76  |    3.55  |   1.06× |
-
-| rotate Y (90°)   |    2.42  |    1.65  |   1.46× |
-
-| rotate tilted    |    4.58  |    1.67  |   2.74× |
-
-| explode displace |    4.02  |    3.58  |   1.12× |
-
+| Operation          | AoS (ms) | SoA (ms) | Speedup |
+|--------------------|---------:|---------:|--------:|
+| translate          |    1.79  |    1.47  |   1.22× |
+| rotate Y (90°)     |    1.96  |    1.66  |   1.18× |
+| rotate tilted (45°)|    2.03  |    1.85  |   1.10× |
+| explode displace   |    4.08  |    3.86  |   1.06× |
 
 
 AoS to SoA conversion overhead: \~4-9 ms one-time cost.
 
 
 
-The strongest SoA gain (2.74×) appears on the tilted rotation, which is a
-
-pure 3x3 matrix-multiply per point. The explode operation gains only 1.12× because 
-its sqrt() call does not vectorize. The translate result is somewhat similar for both; one
-
-plausible explanation is that with 784k points the working set (\~12 MB)
-
-fits in L3 cache, so the bottleneck is compute rather than memory
-
-bandwidth, muting SoA's main advantage.
-
-
-
-Single-run measurements vary substantially between executions; a more
-
-rigorous benchmark would average over many runs with explicit cache
-
-warmup. The values reported here are best-of-three.
+SoA consistently outperforms AoS by 1.06×–1.22× across all operations
+(median of 10 runs). The gains are modest but consistent and the working
+set (~12 MB) fits in L3 cache, so the bottleneck is compute rather than memory bandwidth, limiting SoA's main advantage. Larger datasets
+(>L3 cache) would likely show more pronounced SoA gains.
 
 
 
