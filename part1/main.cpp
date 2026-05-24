@@ -26,11 +26,9 @@ int main() {
               << loadMs << " ms\n\n";
     
     // ----- Convert once to SoA for the SoA benchmark -----
-    auto conversionMs = timeMs([&] {
-        // intentionally unused — just to measure conversion cost separately
-    });
+
     PointCloudSoA originalSoA;
-    conversionMs = timeMs([&] {
+    double conversionMs = timeMs([&] {
         originalSoA = toSoA(original);
     });
     std::cout << "AoS -> SoA conversion: " << conversionMs << " ms\n\n";
