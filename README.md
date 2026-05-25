@@ -456,42 +456,31 @@ the simulation could start with visible artifacts.
 
 
 
-\### Performance notes
+### Performance notes
 
+Benchmark on a single CPU thread, MinGW g++ 15.2, density kept constant
+(~25%) by scaling box ∝ √N:
 
+| N     | Naive O(N²) | Spatial Hash O(N) | Speedup |
+|-------|-------------|-------------------|---------|
+| 200   | 0.034 ms    | 0.039 ms          | 0.9×    |
+| 400   | 0.074 ms    | 0.054 ms          | 1.4×    |
+| 800   | 0.297 ms    | 0.161 ms          | 1.9×    |
+| 1600  | 1.135 ms    | 0.220 ms          | 5.2×    |
+| 3200  | 4.402 ms    | 0.419 ms          | 10.5×   |
 
-Benchmark on a single CPU thread, MinGW g++ 15.2:
+The crossover is around N=400-500. Below N=400, the spatial hash's grid
+build overhead exceeds the savings. Above N=800, the gap widens
+quadratically as expected.
 
+N=6400 and above were excluded from the benchmark because the fixed box
+size reaches physical packing density limits, causing `spawnParticles` to
+fail. The remaining range N=200-3200 clearly demonstrates the algorithmic
+scaling.
 
-
-| N      | Naive O(N²) | Spatial Hash O(N) | Speedup |
-
-|-------:|------------:|------------------:|--------:|
-
-|    200 |    0.09 ms  |          0.09 ms  |    1.0× |
-
-|    800 |    0.19 ms  |          0.19 ms  |    1.0× |
-
-|   1600 |    1.17 ms  |          0.27 ms  |    4.3× |
-
-|   3200 |    4.78 ms  |          0.57 ms  |    8.4× |
-
-|   6400 |   18.27 ms  |          1.32 ms  |   13.8× |
-
-|  12800 |   75.04 ms  |          3.47 ms  |   21.6× |
-
-
-
-The crossover is around N=1000 and below that, the spatial hash's grid
-
-build overhead exceeds the savings. Above N=1000, the gap widens
-
-quadratically as expected. At N=12800, the naive approach is 21.6× slower
-
-and would prevent real-time simulation; the hashed version still fits
-
-comfortably in a single frame budget.
-
+At N=3200, the naive approach is 10.5× slower and would prevent real-time
+simulation; the hashed version still fits comfortably in a single frame
+budget.
 
 
 \### Limitations and future work

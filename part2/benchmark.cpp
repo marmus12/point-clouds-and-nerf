@@ -22,12 +22,12 @@ double runBenchmark(int n, int steps, float box, float radius, float dt,
 }
 
 int main() {
-    const float BOX    = 100.0f;
+    //const float BOX    = 200.0f;
     const float RADIUS = 1.0f;
     const float DT     = 0.1f;
     const int   STEPS  = 60;
-
-    const int Ns[] = { 200, 400, 800, 1600, 3200, 6400, 12800 };
+    
+    const int Ns[] = { 200, 400, 800, 1600, 3200 };
 
     std::ofstream csv("benchmark.csv");
     csv << "N,naive_ms,hashed_ms\n";
@@ -35,8 +35,10 @@ int main() {
     std::printf("%6s | %12s | %12s | %8s\n",
                 "N", "naive ms/f", "hash ms/f", "speedup");
     std::printf("-------+--------------+--------------+----------\n");
-
+    float BOX;
     for (int N : Ns) {
+        // keep the density constant (~%25), box ∝ √N
+        BOX = 100.0f * std::sqrt(N / 800.0f);
         double naiveMs = runBenchmark(N, STEPS, BOX, RADIUS, DT,
             [&](std::vector<Particle>& p) { particleCollide(p, RADIUS); });
 

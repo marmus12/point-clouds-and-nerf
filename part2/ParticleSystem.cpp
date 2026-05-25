@@ -143,7 +143,7 @@ std::vector<Particle> spawnParticles(int n, float box,
     // an already-placed particle. This is O(N^2) but only runs once
     // at initialization, so it doesn't affect the per-frame cost.
     const float minDistSq = 4.0f * radius * radius;
-    const int   maxAttempts = 10000;
+    const int   maxAttempts = n*100;
     int attempts = 0;
 
     while ((int)particles.size() < n) {
